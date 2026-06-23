@@ -7,7 +7,7 @@ use App\Http\Controllers\Api\CardController;
 use App\Http\Controllers\Api\MemberController;
 use App\Http\Controllers\Api\TagController;
 
-Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
+Route::prefix('v1')->group(function () {
     Route::apiResource('boards', BoardController::class);
     Route::prefix('boards/{board}')->group(function () {
         Route::apiResource('lists', BoardListController::class)
