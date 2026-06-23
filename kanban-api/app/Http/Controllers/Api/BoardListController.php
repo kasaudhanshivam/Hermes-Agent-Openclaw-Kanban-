@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\BoardListResource;
+use App\Models\Board;
 use App\Models\BoardList;
 use Illuminate\Http\Request;
 
@@ -11,7 +12,7 @@ class BoardListController extends Controller
 {
     public function index(Request $request)
     {
-        $board = request()->route('board');
+        $board = Board::findOrFail(request()->route('board'));
 
         $lists = BoardList::where('board_id', $board->id)
             ->with('cards.tags', 'cards')
@@ -23,7 +24,7 @@ class BoardListController extends Controller
 
     public function store(Request $request)
     {
-        $board = request()->route('board');
+        $board = Board::findOrFail(request()->route('board'));
 
         $validated = $request->validate([
             'title' => 'required|string|max:255',
@@ -39,7 +40,7 @@ class BoardListController extends Controller
 
     public function show($list)
     {
-        $list = BoardList::where('board_id', request()->route('board')->id)
+        $list = BoardList::where('board_id', Board::findOrFail(request()->route('board'))->id)
             ->with('cards.tags', 'cards')
             ->findOrFail($list);
 
@@ -53,7 +54,7 @@ class BoardListController extends Controller
             'order' => 'sometimes|required|integer|min:0',
         ]);
 
-        $list = BoardList::where('board_id', request()->route('board')->id)->findOrFail($list);
+        $list = BoardList::where('board_id', Board::findOrFail(request()->route('board'))->id)->findOrFail($list);
         $list->update($validated);
 
         return new BoardListResource($list->load('cards.tags', 'cards'));
@@ -61,7 +62,7 @@ class BoardListController extends Controller
 
     public function destroy($list)
     {
-        $list = BoardList::where('board_id', request()->route('board')->id)->findOrFail($list);
+        $list = BoardList::where('board_id', Board::findOrFail(request()->route('board'))->id)->findOrFail($list);
         $list->delete();
 
         return response()->noContent();
