@@ -1,11 +1,22 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\File;
 use App\Http\Controllers\Api\BoardController;
 use App\Http\Controllers\Api\BoardListController;
 use App\Http\Controllers\Api\CardController;
 use App\Http\Controllers\Api\MemberController;
 use App\Http\Controllers\Api\TagController;
+
+Route::get('/setup-db', function () {
+    $path = database_path('database.sqlite');
+    File::ensureDirectoryExists(database_path(''));
+    file_put_contents($path, '');
+    Artisan::call('migrate', ['--force' => true]);
+
+    return response()->json(['status' => 'Database setup complete']);
+});
 
 Route::prefix('v1')->group(function () {
     Route::apiResource('boards', BoardController::class);
