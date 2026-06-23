@@ -1,86 +1,86 @@
-import { useEffect, useState } from 'react'
-import axios from 'axios'
-import CardItem from './CardItem'
+import { useEffect, useState } from 'react';
+import axios from 'axios';
+import CardItem from './CardItem.jsx';
 
-const API = `${import.meta.env.VITE_API_BASE ?? ''}/api/v1`
+const API = `${import.meta.env.VITE_API_BASE ?? ''}/api/v1`;
 
 export default function ListColumn({ list, boardId, members, tags, allLists }) {
-  const [cards, setCards] = useState([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-  const [showAdd, setShowAdd] = useState(false)
-  const [newTitle, setNewTitle] = useState('')
-  const [newDescription, setNewDescription] = useState('')
-  const [newDueDate, setNewDueDate] = useState('')
-  const [saving, setSaving] = useState(false)
-  const [editing, setEditing] = useState(false)
-  const [editTitle, setEditTitle] = useState(list.title)
-  const [listError, setListError] = useState('')
+  const [cards, setCards] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [showAdd, setShowAdd] = useState(false);
+  const [newTitle, setNewTitle] = useState('');
+  const [newDescription, setNewDescription] = useState('');
+  const [newDueDate, setNewDueDate] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [editTitle, setEditTitle] = useState(list.title);
+  const [listError, setListError] = useState('');
 
   const fetchCards = async () => {
-    let cancelled = false
-    setLoading(true)
-    setError('')
+    let cancelled = false;
+    setLoading(true);
+    setError('');
     try {
-      const { data } = await axios.get(`${API}/boards/${boardId}/lists/${list.id}/cards`)
-      if (!cancelled) setCards(data.data ?? data)
+      const { data } = await axios.get(`${API}/boards/${boardId}/lists/${list.id}/cards`);
+      if (!cancelled) setCards(data.data ?? data);
     } catch (e) {
-      if (!cancelled) setError(e.message)
+      if (!cancelled) setError(e.message);
     } finally {
-      if (!cancelled) setLoading(false)
+      if (!cancelled) setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
-    fetchCards()
-  }, [boardId, list.id])
+    fetchCards();
+  }, [boardId, list.id]);
 
   const handleAddCard = async (e) => {
-    e.preventDefault()
-    if (!newTitle.trim()) return
-    setSaving(true)
-    setError('')
+    e.preventDefault();
+    if (!newTitle.trim()) return;
+    setSaving(true);
+    setError('');
     try {
       const { data } = await axios.post(`${API}/boards/${boardId}/lists/${list.id}/cards`, {
         title: newTitle.trim(),
         description: newDescription.trim(),
         due_date: newDueDate || null,
-      })
-      const created = data.data ?? data
-      setCards((prev) => [...prev, created])
-      setNewTitle('')
-      setNewDescription('')
-      setNewDueDate('')
-      setShowAdd(false)
+      });
+      const created = data.data ?? data;
+      setCards((prev) => [...prev, created]);
+      setNewTitle('');
+      setNewDescription('');
+      setNewDueDate('');
+      setShowAdd(false);
     } catch (e) {
-      setError(e.message)
+      setError(e.message);
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
-  }
+  };
 
   const handleRename = async () => {
-    if (!editTitle.trim()) return
-    setListError('')
+    if (!editTitle.trim()) return;
+    setListError('');
     try {
-      const { data } = await axios.put(`${API}/boards/${boardId}/lists/${list.id}`, { title: editTitle.trim() })
-      const updated = data.data ?? data
-      list.title = updated.title
-      setEditing(false)
+      const { data } = await axios.put(`${API}/boards/${boardId}/lists/${list.id}`, { title: editTitle.trim() });
+      const updated = data.data ?? data;
+      list.title = updated.title;
+      setEditing(false);
     } catch (e) {
-      setListError(e.message)
+      setListError(e.message);
     }
-  }
+  };
 
   const handleDeleteList = async () => {
-    if (!window.confirm('Delete this list and all its cards?')) return
-    setListError('')
+    if (!window.confirm('Delete this list and all its cards?')) return;
+    setListError('');
     try {
-      await axios.delete(`${API}/boards/${boardId}/lists/${list.id}`)
+      await axios.delete(`${API}/boards/${boardId}/lists/${list.id}`);
     } catch (e) {
-      setListError(e.message)
+      setListError(e.message);
     }
-  }
+  };
 
   return (
     <div className="min-w-[270px] w-[270px] shrink-0 rounded-md bg-slate-50 border border-slate-200 flex flex-col max-h-full">
@@ -92,7 +92,10 @@ export default function ListColumn({ list, boardId, members, tags, allLists }) {
               value={editTitle}
               onChange={(e) => setEditTitle(e.target.value)}
               className="flex-1 rounded border border-slate-300 px-2 py-1 text-sm"
-              onKeyDown={(e) => { if (e.key === 'Enter') handleRename(); if (e.key === 'Escape') setEditing(false) }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleRename();
+                if (e.key === 'Escape') setEditing(false);
+              }}
             />
             <button type="button" onClick={handleRename} className="px-2 py-1 bg-indigo-600 text-white rounded text-xs">Save</button>
             <button type="button" onClick={() => setEditing(false)} className="px-2 py-1 bg-slate-200 rounded text-xs">Cancel</button>
@@ -105,7 +108,7 @@ export default function ListColumn({ list, boardId, members, tags, allLists }) {
         )}
         {!editing && (
           <div className="flex items-center gap-2">
-            <button type="button" onClick={() => { setEditing(true); setEditTitle(list.title); setListError('') }} className="text-xs text-slate-500 hover:text-slate-900">Edit</button>
+            <button type="button" onClick={() => { setEditing(true); setEditTitle(list.title); setListError(''); }} className="text-xs text-slate-500 hover:text-slate-900">Edit</button>
             <button type="button" onClick={handleDeleteList} className="text-xs text-red-600 hover:text-red-800">Delete</button>
           </div>
         )}
@@ -171,5 +174,5 @@ export default function ListColumn({ list, boardId, members, tags, allLists }) {
         )}
       </div>
     </div>
-  )
+  );
 }
