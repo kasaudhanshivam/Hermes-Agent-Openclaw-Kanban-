@@ -7,10 +7,8 @@ const API = `${import.meta.env.VITE_API_BASE ?? ''}/api/v1`
 export default function BoardView({ boardId, onBack }) {
   const [board, setBoard] = useState(null)
   const [lists, setLists] = useState([])
-  const [members, setMembers] = useState([])
-  const [tags, setTags] = useState([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
+  const [error, setError] = useState('');
 
   const [addingList, setAddingList] = useState(false)
   const [newListTitle, setNewListTitle] = useState('')
@@ -24,15 +22,11 @@ export default function BoardView({ boardId, onBack }) {
     Promise.all([
       axios.get(`${API}/boards/${boardId}`),
       axios.get(`${API}/boards/${boardId}/lists`),
-      axios.get(`${API}/boards/${boardId}/tags`),
-      axios.get(`${API}/boards/${boardId}/members`),
     ])
-      .then(([boardRes, listsRes, tagsRes, membersRes]) => {
+      .then(([boardRes, listsRes]) => {
         if (cancelled) return
         setBoard(boardRes.data.data ?? boardRes.data)
         setLists(listsRes.data.data ?? listsRes.data)
-        setTags(tagsRes.data.data ?? tagsRes.data)
-        setMembers(membersRes.data.data ?? membersRes.data)
       })
       .catch((e) => { if (!cancelled) setError(e.message) })
       .finally(() => { if (!cancelled) setLoading(false) })
@@ -65,18 +59,6 @@ export default function BoardView({ boardId, onBack }) {
       <header className="bg-white border-b border-slate-200 px-4 py-3 flex items-center gap-3">
         <button onClick={onBack} className="text-sm text-slate-500 hover:text-slate-900">← Back</button>
         <div className="font-semibold text-slate-900 truncate">{board?.name}</div>
-        <div className="ml-auto flex items-center gap-2 text-xs text-slate-500">
-          {(tags || []).slice(0, 3).map((tag) => (
-            <span key={tag.id} className="px-2 py-1 rounded bg-blue-50 text-blue-700 border border-blue-100">
-              {tag.name}
-            </span>
-          ))}
-          {(members || []).slice(0, 3).map((member) => (
-            <span key={member.id} className="px-2 py-1 rounded bg-emerald-50 text-emerald-700 border border-emerald-100">
-              {member.name || member.user?.name || member.user_id}
-            </span>
-          ))}
-        </div>
       </header>
 
       <main className="flex-1 overflow-x-auto overflow-y-hidden">
