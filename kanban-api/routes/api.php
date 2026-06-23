@@ -15,7 +15,15 @@ Route::get('/setup-db', function () {
     file_put_contents($path, '');
     Artisan::call('migrate', ['--force' => true]);
 
-    return response()->json(['status' => 'Database setup complete']);
+    $user = \App\Models\User::firstOrCreate(
+        ['email' => 'admin@test.com'],
+        ['name' => 'Admin', 'password' => 'password']
+    );
+
+    return response()->json([
+        'status' => 'Database setup complete',
+        'user_id' => $user->id,
+    ]);
 });
 
 Route::prefix('v1')->group(function () {
