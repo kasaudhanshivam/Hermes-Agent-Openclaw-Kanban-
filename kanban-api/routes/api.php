@@ -10,7 +10,7 @@ use App\Http\Controllers\Api\MemberController;
 use App\Http\Controllers\Api\TagController;
 
 Route::get('/setup-db', function () {
-    $path = database_path('database.sqlite');
+    $path = database_path('storage.sqlite');
     File::ensureDirectoryExists(database_path(''));
     file_put_contents($path, '');
     Artisan::call('migrate', ['--force' => true]);
