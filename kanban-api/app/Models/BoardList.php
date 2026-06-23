@@ -20,6 +20,6 @@ class BoardList extends Model
 
     public function cards()
     {
-        return $this->hasMany(Card::class)->orderBy('order');
+        return $this->hasMany(Card::class, 'list_id')->orderBy('order');
     }
 }
