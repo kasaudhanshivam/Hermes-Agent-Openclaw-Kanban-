@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import axios from 'axios'
+import { moveCard } from '../api/cards'
 
 const API = `${import.meta.env.VITE_API_BASE ?? ''}/api/v1`
 
@@ -9,6 +10,7 @@ export default function CardItem({
   listId,
   members = [],
   tags = [],
+  allLists = [],
   onRefresh,
 }) {
   const [editing, setEditing] = useState(false)
@@ -17,6 +19,9 @@ export default function CardItem({
   const [editDueDate, setEditDueDate] = useState(card.due_date || '')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [moving, setMoving] = useState(false)
+  const [moveTarget, setMoveTarget] = useState('')
+  const [moveError, setMoveError] = useState('')
 
   const isOverdue = useMemo(() => {
     if (!card.due_date) return false
@@ -59,6 +64,33 @@ export default function CardItem({
     }
   }
 
+  const validTargets = useMemo(
+    () => (Array.isArray(allLists) ? allLists.filter((l) => l.id !== listId) : []),
+    [allLists, listId]
+  )
+
+  const handleMove = async (e) => {
+    e.preventDefault()
+    if (!moveTarget) return
+    setMoving(true)
+    setMoveError('')
+    try {
+      await moveCard({
+        boardId,
+        listId,
+        cardId: card.id,
+        list_id: Number(moveTarget),
+        order: 0,
+      })
+      onRefresh?.()
+      setMoveTarget('')
+    } catch (e) {
+      setMoveError(e.message)
+    } finally {
+      setMoving(false)
+    }
+  }
+
   return (
     <div className={`border rounded p-2 ${borderClass}`}>
       <div className="flex items-start justify-between gap-2">
@@ -89,6 +121,33 @@ export default function CardItem({
       </div>
 
       {error && !editing && <p className="mt-1 text-xs text-red-600">Error: {error}</p>}
+
+      {!editing && validTargets.length > 0 && (
+        <form onSubmit={handleMove} className="mt-2">
+          <div className="flex items-center gap-2">
+            <select
+              value={moveTarget}
+              onChange={(e) => setMoveTarget(e.target.value)}
+              className="flex-1 rounded border border-gray-300 px-2 py-1 text-sm"
+            >
+              <option value="">Move to...</option>
+              {validTargets.map((l) => (
+                <option key={l.id} value={l.id}>
+                  {l.title}
+                </option>
+              ))}
+            </select>
+            <button
+              type="submit"
+              disabled={moving || !moveTarget}
+              className="px-3 py-1 bg-slate-700 text-white rounded text-xs hover:bg-slate-800 disabled:opacity-50"
+            >
+              {moving ? 'Moving...' : 'Move'}
+            </button>
+          </div>
+          {moveError && <p className="mt-1 text-xs text-red-600">Error: {moveError}</p>}
+        </form>
+      )}
 
       {editing && (
         <form onSubmit={handleSave} className="mt-2 space-y-2 bg-white p-2 rounded border">

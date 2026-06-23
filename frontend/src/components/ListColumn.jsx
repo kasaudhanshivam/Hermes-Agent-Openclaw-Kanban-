@@ -4,7 +4,7 @@ import CardItem from './CardItem.jsx';
 
 const API = `${import.meta.env.VITE_API_BASE ?? ''}/api/v1`;
 
-export default function ListColumn({ list, boardId, allLists }) {
+export default function ListColumn({ list, boardId, allLists = [] }) {
   const [cards, setCards] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
