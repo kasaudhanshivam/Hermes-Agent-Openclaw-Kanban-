@@ -32,7 +32,7 @@ export default function CardItem({
 
   const refreshCard = async () => {
     try {
-      const { data } = await axios.get(`${API}/boards/${boardId}/cards/${card.id}`)
+      const { data } = await axios.get(`${API}/boards/${boardId}/lists/${listId}/cards/${card.id}`)
       const updated = data.data ?? data
       setLocalMembers(updated.members || [])
       setLocalTags(updated.tags || [])
@@ -56,11 +56,12 @@ export default function CardItem({
     setSaving(true)
     setError('')
     try {
-      const { data } = await axios.put(`${API}/boards/${boardId}/lists/${listId}/cards/${card.id}`, {
+      await axios.put(`${API}/boards/${boardId}/lists/${listId}/cards/${card.id}`, {
         title: editTitle.trim(),
         description: editDescription.trim(),
         due_date: editDueDate || null,
       })
+      const { data } = await axios.get(`${API}/boards/${boardId}/lists/${listId}/cards/${card.id}`)
       const updated = data.data ?? data
       // update parent state via onRefresh; also update local fields
       Object.assign(card, updated)

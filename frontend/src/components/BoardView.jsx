@@ -80,7 +80,7 @@ export default function BoardView({ boardId, onBack }) {
       </header>
 
       <main className="flex-1 overflow-x-auto overflow-y-hidden">
-        <div className="h-full flex items-stretch gap-3 p-4">
+        <div className="h-full flex items-stretch gap-3">
           {lists.map((list) => (
             <ListColumn
               key={list.id}
