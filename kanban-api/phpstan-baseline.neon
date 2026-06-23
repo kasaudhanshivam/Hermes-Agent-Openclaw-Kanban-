@@ -1,0 +1,73 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Call to an undefined static method App\\Models\\Board\:\:create\(\)\.$#'
+			identifier: staticMethod.notFound
+			count: 1
+			path: app/Http/Controllers/Api/BoardController.php
+
+		-
+			message: '#^Call to an undefined static method App\\Models\\BoardList\:\:create\(\)\.$#'
+			identifier: staticMethod.notFound
+			count: 1
+			path: app/Http/Controllers/Api/BoardListController.php
+
+		-
+			message: '#^Call to an undefined static method App\\Models\\BoardList\:\:where\(\)\.$#'
+			identifier: staticMethod.notFound
+			count: 4
+			path: app/Http/Controllers/Api/BoardListController.php
+
+		-
+			message: '#^Call to an undefined static method App\\Models\\BoardList\:\:findOrFail\(\)\.$#'
+			identifier: staticMethod.notFound
+			count: 5
+			path: app/Http/Controllers/Api/CardController.php
+
+		-
+			message: '#^Call to an undefined static method App\\Models\\Card\:\:create\(\)\.$#'
+			identifier: staticMethod.notFound
+			count: 1
+			path: app/Http/Controllers/Api/CardController.php
+
+		-
+			message: '#^Call to an undefined static method App\\Models\\Card\:\:findOrFail\(\)\.$#'
+			identifier: staticMethod.notFound
+			count: 5
+			path: app/Http/Controllers/Api/CardController.php
+
+		-
+			message: '#^Call to an undefined static method App\\Models\\Card\:\:where\(\)\.$#'
+			identifier: staticMethod.notFound
+			count: 5
+			path: app/Http/Controllers/Api/CardController.php
+
+		-
+			message: '#^Call to an undefined static method App\\Models\\Member\:\:create\(\)\.$#'
+			identifier: staticMethod.notFound
+			count: 1
+			path: app/Http/Controllers/Api/MemberController.php
+
+		-
+			message: '#^Call to an undefined static method App\\Models\\Member\:\:where\(\)\.$#'
+			identifier: staticMethod.notFound
+			count: 4
+			path: app/Http/Controllers/Api/MemberController.php
+
+		-
+			message: '#^Call to an undefined static method App\\Models\\Tag\:\:create\(\)\.$#'
+			identifier: staticMethod.notFound
+			count: 1
+			path: app/Http/Controllers/Api/TagController.php
+
+		-
+			message: '#^Call to an undefined static method App\\Models\\Tag\:\:where\(\)\.$#'
+			identifier: staticMethod.notFound
+			count: 4
+			path: app/Http/Controllers/Api/TagController.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Relations\\HasMany\:\:orderBy\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Models/BoardList.php
