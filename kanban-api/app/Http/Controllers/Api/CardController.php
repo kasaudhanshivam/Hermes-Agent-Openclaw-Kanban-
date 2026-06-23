@@ -10,11 +10,11 @@ use Illuminate\Http\Request;
 
 class CardController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request, $board, $list)
     {
-        $list = BoardList::findOrFail(request()->route('list')->id ?? request()->route('list'));
+        $listModel = BoardList::where('board_id', Board::findOrFail($board)->id)->findOrFail($list);
 
-        $cards = Card::where('list_id', $list->id)
+        $cards = Card::where('list_id', $listModel->id)
             ->with('tags')
             ->orderBy('order')
             ->get();
@@ -22,9 +22,9 @@ class CardController extends Controller
         return CardResource::collection($cards);
     }
 
-    public function store(Request $request)
+    public function store(Request $request, $board, $list)
     {
-        $list = BoardList::findOrFail(request()->route('list')->id ?? request()->route('list'));
+        $listModel = BoardList::where('board_id', Board::findOrFail($board)->id)->findOrFail($list);
 
         $validated = $request->validate([
             'title' => 'required|string|max:255',
@@ -32,31 +32,27 @@ class CardController extends Controller
             'due_date' => 'nullable|date',
         ]);
 
-        $order = Card::where('list_id', $list->id)->max('order') + 1;
+        $order = Card::where('list_id', $listModel->id)->max('order') + 1;
 
         $card = Card::create(array_merge($validated, [
-            'list_id' => $list->id,
+            'list_id' => $listModel->id,
             'order' => $order,
         ]));
 
         return new CardResource($card->load('tags'));
     }
 
-    public function show($card)
+    public function show(Request $request, $board, $list, $card)
     {
-        $list = BoardList::findOrFail(request()->route('list')->id ?? request()->route('list'));
-
-        $card = Card::where('list_id', $list->id)
+        $card = Card::where('list_id', BoardList::where('board_id', Board::findOrFail($board)->id)->findOrFail($list)->id)
             ->with('tags')
             ->findOrFail($card);
 
         return new CardResource($card);
     }
 
-    public function update(Request $request, $card)
+    public function update(Request $request, $board, $list, $card)
     {
-        $list = BoardList::findOrFail(request()->route('list')->id ?? request()->route('list'));
-
         $validated = $request->validate([
             'title' => 'sometimes|required|string|max:255',
             'description' => 'nullable|string',
@@ -64,23 +60,21 @@ class CardController extends Controller
             'due_date' => 'nullable|date',
         ]);
 
-        $card = Card::where('list_id', $list->id)->findOrFail($card);
+        $card = Card::where('list_id', BoardList::where('board_id', Board::findOrFail($board)->id)->findOrFail($list)->id)->findOrFail($card);
         $card->update($validated);
 
         return new CardResource($card->load('tags'));
     }
 
-    public function destroy($card)
+    public function destroy(Request $request, $board, $list, $card)
     {
-        $list = BoardList::findOrFail(request()->route('list')->id ?? request()->route('list'));
-
-        $card = Card::where('list_id', $list->id)->findOrFail($card);
+        $card = Card::where('list_id', BoardList::where('board_id', Board::findOrFail($board)->id)->findOrFail($list)->id)->findOrFail($card);
         $card->delete();
 
         return response()->noContent();
     }
 
-    public function move(Request $request, $card)
+    public function move(Request $request, $board, $list, $card)
     {
         $validated = $request->validate([
             'list_id' => 'required|integer|exists:lists,id',
@@ -93,44 +87,42 @@ class CardController extends Controller
         return new CardResource($card->load('tags'));
     }
 
-    public function attachTag(Request $request, $card, $tag)
+    public function attachTag(Request $request, $board, $list, $card, $tag)
     {
-        $card = Card::findOrFail($card);
+        $card = Card::where('list_id', BoardList::where('board_id', Board::findOrFail($board)->id)->findOrFail($list)->id)->findOrFail($card);
         $card->tags()->attach($tag);
 
         return new CardResource($card->load('tags'));
     }
 
-    public function detachTag($card, $tag)
+    public function detachTag(Request $request, $board, $list, $card, $tag)
     {
-        $card = Card::findOrFail($card);
+        $card = Card::where('list_id', BoardList::where('board_id', Board::findOrFail($board)->id)->findOrFail($list)->id)->findOrFail($card);
         $card->tags()->detach($tag);
 
         return response()->noContent();
     }
 
-    public function assignMember(Request $request, $card)
+    public function assignMember(Request $request, $board, $list, $card)
     {
         $validated = $request->validate([
             'member_id' => 'required|integer|exists:members,id',
         ]);
 
-        $card = Card::findOrFail($card);
+        $card = Card::where('list_id', BoardList::where('board_id', Board::findOrFail($board)->id)->findOrFail($list)->id)->findOrFail($card);
 
-        // The task mentions assignMember endpoint, but schema lacks card_member pivot / assigned_to column.
-        // Using the members table by member_id for now to avoid unknown schema violations.
         $card->members()->attach($validated['member_id']);
 
         return new CardResource($card->load('tags'));
     }
 
-    public function unassignMember($card)
+    public function unassignMember(Request $request, $board, $list, $card)
     {
-        $validated = request()->validate([
+        $validated = $request->validate([
             'member_id' => 'required|integer|exists:members,id',
         ]);
 
-        $card = Card::findOrFail($card);
+        $card = Card::where('list_id', BoardList::where('board_id', Board::findOrFail($board)->id)->findOrFail($list)->id)->findOrFail($card);
         $card->members()->detach($validated['member_id']);
 
         return response()->noContent();

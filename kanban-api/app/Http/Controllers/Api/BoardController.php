@@ -22,31 +22,33 @@ class BoardController extends Controller
             'name' => 'required|string|max:255',
         ]);
 
-        $board = Board::create($validated + ['created_by' => 1]);
+        $board = Board::create($validated + ['created_by' => \App\Models\User::first()?->id ?? 1]);
 
         return new BoardResource($board->load('lists', 'tags', 'members'));
     }
 
-    public function show(Request $request, Board $board)
+    public function show(Request $request, $board)
     {
-        $board->load('lists.cards.tags', 'lists.cards', 'tags', 'members');
+        $board = Board::with('lists.cards.tags', 'lists.cards', 'tags', 'members')->findOrFail($board);
 
         return new BoardResource($board);
     }
 
-    public function update(Request $request, Board $board)
+    public function update(Request $request, $board)
     {
         $validated = $request->validate([
             'name' => 'sometimes|required|string|max:255',
         ]);
 
+        $board = Board::findOrFail($board);
         $board->update($validated);
 
         return new BoardResource($board->load('lists', 'tags', 'members'));
     }
 
-    public function destroy(Board $board)
+    public function destroy($board)
     {
+        $board = Board::findOrFail($board);
         $board->delete();
 
         return response()->noContent();
