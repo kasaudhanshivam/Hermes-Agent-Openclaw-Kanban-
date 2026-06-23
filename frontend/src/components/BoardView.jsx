@@ -68,8 +68,6 @@ export default function BoardView({ boardId, onBack }) {
               key={list.id}
               list={list}
               boardId={boardId}
-              members={members}
-              tags={tags}
               allLists={lists}
             />
           ))}
