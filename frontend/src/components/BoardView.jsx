@@ -7,10 +7,15 @@ const API = `${import.meta.env.VITE_API_BASE ?? ''}/api/v1`
 export default function BoardView({ boardId, onBack }) {
   const [board, setBoard] = useState(null)
   const [lists, setLists] = useState([])
-  const [tags, setTags] = useState([])
   const [members, setMembers] = useState([])
+  const [tags, setTags] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+
+  const [addingList, setAddingList] = useState(false)
+  const [newListTitle, setNewListTitle] = useState('')
+  const [listSaving, setListSaving] = useState(false)
+  const [listError, setListError] = useState('')
 
   useEffect(() => {
     let cancelled = false
@@ -34,45 +39,48 @@ export default function BoardView({ boardId, onBack }) {
     return () => { cancelled = true }
   }, [boardId])
 
-  if (loading) return <p className="p-4">Loading board...</p>
-  if (error) return <p className="p-4 text-red-600">Error: {error}</p>
+  const handleCreateList = async (e) => {
+    e.preventDefault()
+    if (!newListTitle.trim()) return
+    setListSaving(true)
+    setListError('')
+    try {
+      const { data } = await axios.post(`${API}/boards/${boardId}/lists`, { title: newListTitle.trim() })
+      const created = data.data ?? data
+      setLists((prev) => [...prev, created])
+      setNewListTitle('')
+      setAddingList(false)
+    } catch (e) {
+      setListError(e.message)
+    } finally {
+      setListSaving(false)
+    }
+  }
+
+  if (loading) return <div className="p-6 text-gray-600">Loading board...</div>
+  if (error) return <div className="p-6 text-red-600">Error: {error}</div>
 
   return (
-    <div className="p-4 max-w-6xl mx-auto">
-      <button onClick={onBack} className="mb-4 text-blue-600 hover:underline text-sm">← Back</button>
-      <h2 className="text-2xl font-bold mb-2">{board?.name}</h2>
-
-      <div className="mb-6">
-        <h3 className="font-semibold mb-1 text-sm uppercase tracking-wide text-gray-600">Tags</h3>
-        <div className="flex flex-wrap gap-2">
-          {(tags || []).map((tag) => (
-            <span
-              key={tag.id}
-              className="px-2 py-1 rounded text-sm"
-              style={{ backgroundColor: tag.color || '#dbeafe', color: tag.color ? '#1f2937' : '#1e40af' }}
-            >
+    <div className="h-screen bg-slate-100 flex flex-col">
+      <header className="bg-white border-b border-slate-200 px-4 py-3 flex items-center gap-3">
+        <button onClick={onBack} className="text-sm text-slate-500 hover:text-slate-900">← Back</button>
+        <div className="font-semibold text-slate-900 truncate">{board?.name}</div>
+        <div className="ml-auto flex items-center gap-2 text-xs text-slate-500">
+          {(tags || []).slice(0, 3).map((tag) => (
+            <span key={tag.id} className="px-2 py-1 rounded bg-blue-50 text-blue-700 border border-blue-100">
               {tag.name}
             </span>
           ))}
-          {(!tags || tags.length === 0) && <span className="text-xs text-gray-500">No tags</span>}
-        </div>
-      </div>
-
-      <div className="mb-6">
-        <h3 className="font-semibold mb-1 text-sm uppercase tracking-wide text-gray-600">Members</h3>
-        <div className="flex flex-wrap gap-2">
-          {(members || []).map((member) => (
-            <span key={member.id} className="px-2 py-1 bg-green-100 text-green-800 rounded text-sm">
+          {(members || []).slice(0, 3).map((member) => (
+            <span key={member.id} className="px-2 py-1 rounded bg-emerald-50 text-emerald-700 border border-emerald-100">
               {member.name || member.user?.name || member.user_id}
             </span>
           ))}
-          {(!members || members.length === 0) && <span className="text-xs text-gray-500">No members</span>}
         </div>
-      </div>
+      </header>
 
-      <div>
-        <h3 className="font-semibold mb-2 text-sm uppercase tracking-wide text-gray-600">Lists</h3>
-        <div className="space-y-3">
+      <main className="flex-1 overflow-x-auto overflow-y-hidden">
+        <div className="h-full flex items-stretch gap-3 p-4">
           {lists.map((list) => (
             <ListColumn
               key={list.id}
@@ -80,10 +88,39 @@ export default function BoardView({ boardId, onBack }) {
               boardId={boardId}
               members={members}
               tags={tags}
+              allLists={lists}
             />
           ))}
+
+          {!addingList ? (
+            <button
+              type="button"
+              onClick={() => { setAddingList(true); setListError('') }}
+              className="min-w-[270px] w-[270px] shrink-0 rounded-md border border-dashed border-slate-300 bg-white/70 hover:bg-white text-slate-600 hover:text-slate-900 px-3 py-3 text-sm flex items-center justify-center"
+            >
+              + Add List
+            </button>
+          ) : (
+            <form onSubmit={handleCreateList} className="min-w-[270px] w-[270px] shrink-0 rounded-md bg-white border border-slate-200 p-3 flex flex-col gap-2">
+              <input
+                type="text"
+                value={newListTitle}
+                onChange={(e) => setNewListTitle(e.target.value)}
+                placeholder="List title"
+                className="w-full rounded border border-slate-300 px-2 py-1.5 text-sm"
+                autoFocus
+              />
+              {listError && <p className="text-xs text-red-600">Error: {listError}</p>}
+              <div className="flex items-center gap-2">
+                <button type="submit" disabled={listSaving} className="px-3 py-1.5 bg-indigo-600 text-white rounded text-sm hover:bg-indigo-700 disabled:opacity-50">
+                  {listSaving ? 'Adding...' : 'Add'}
+                </button>
+                <button type="button" onClick={() => setAddingList(false)} className="px-3 py-1.5 bg-slate-100 text-slate-700 rounded text-sm hover:bg-slate-200">Cancel</button>
+              </div>
+            </form>
+          )}
         </div>
-      </div>
+      </main>
     </div>
   )
 }

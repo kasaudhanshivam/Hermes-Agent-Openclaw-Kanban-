@@ -4,7 +4,7 @@ import CardItem from './CardItem'
 
 const API = `${import.meta.env.VITE_API_BASE ?? ''}/api/v1`
 
-export default function ListColumn({ list, boardId, members, tags }) {
+export default function ListColumn({ list, boardId, members, tags, allLists }) {
   const [cards, setCards] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -16,10 +16,8 @@ export default function ListColumn({ list, boardId, members, tags }) {
   const [editing, setEditing] = useState(false)
   const [editTitle, setEditTitle] = useState(list.title)
   const [listError, setListError] = useState('')
-  const [moveTargets, setMoveTargets] = useState({}) // cardId -> { list_id, order }
+  const [moveTargets, setMoveTargets] = useState({})
   const [moving, setMoving] = useState({})
-
-  const parentLists = useMemo(() => tags || [], [tags])
 
   const fetchCards = async () => {
     let cancelled = false
@@ -67,9 +65,7 @@ export default function ListColumn({ list, boardId, members, tags }) {
     if (!editTitle.trim()) return
     setListError('')
     try {
-      const { data } = await axios.put(`${API}/boards/${boardId}/lists/${list.id}`, {
-        title: editTitle.trim(),
-      })
+      const { data } = await axios.put(`${API}/boards/${boardId}/lists/${list.id}`, { title: editTitle.trim() })
       const updated = data.data ?? data
       list.title = updated.title
       setEditing(false)
@@ -83,8 +79,6 @@ export default function ListColumn({ list, boardId, members, tags }) {
     setListError('')
     try {
       await axios.delete(`${API}/boards/${boardId}/lists/${list.id}`)
-      // notify parent to remove list? For now, we clear the column.
-      setCards([])
     } catch (e) {
       setListError(e.message)
     }
@@ -101,11 +95,9 @@ export default function ListColumn({ list, boardId, members, tags }) {
         { list_id: Number(payload.list_id), order: Number(payload.order) || 0 }
       )
       const updated = data.data ?? data
-      // If moved to another list, remove from here and let that column refresh itself.
       if (Number(updated.list_id) !== Number(list.id)) {
         setCards((prev) => prev.filter((c) => c.id !== cardId))
       } else {
-        // update order locally
         setCards((prev) => prev.map((c) => (c.id === cardId ? updated : c)))
       }
       setMoveTargets((prev) => {
@@ -125,41 +117,38 @@ export default function ListColumn({ list, boardId, members, tags }) {
   }
 
   return (
-    <div className="border rounded-md p-3 bg-gray-50">
-      <div className="flex items-center justify-between mb-2">
+    <div className="min-w-[270px] w-[270px] shrink-0 rounded-md bg-slate-50 border border-slate-200 flex flex-col max-h-full">
+      <div className="flex items-center justify-between px-3 pt-3 pb-2">
         {editing ? (
           <div className="flex items-center gap-2 flex-1">
             <input
               type="text"
               value={editTitle}
               onChange={(e) => setEditTitle(e.target.value)}
-              className="flex-1 rounded border border-gray-300 px-2 py-1 text-sm"
+              className="flex-1 rounded border border-slate-300 px-2 py-1 text-sm"
               onKeyDown={(e) => { if (e.key === 'Enter') handleRename(); if (e.key === 'Escape') setEditing(false) }}
             />
             <button type="button" onClick={handleRename} className="px-2 py-1 bg-indigo-600 text-white rounded text-xs">Save</button>
-            <button type="button" onClick={() => setEditing(false)} className="px-2 py-1 bg-gray-200 rounded text-xs">Cancel</button>
+            <button type="button" onClick={() => setEditing(false)} className="px-2 py-1 bg-slate-200 rounded text-xs">Cancel</button>
           </div>
         ) : (
           <div className="flex items-center gap-2">
-            <h4 className="font-semibold">{list.title}</h4>
-            <span className="text-xs text-gray-500">(#{list.order ?? ''})</span>
+            <h4 className="font-semibold text-slate-900">{list.title}</h4>
+            <span className="text-xs text-slate-500">({list.order ?? 0})</span>
           </div>
         )}
-        <div className="flex items-center gap-2 ml-2">
-          {!editing && (
-            <>
-              <button type="button" onClick={() => { setEditing(true); setEditTitle(list.title); setListError('') }} className="text-xs text-blue-600 hover:underline">Edit</button>
-              <button type="button" onClick={handleDeleteList} className="text-xs text-red-600 hover:underline">Delete</button>
-            </>
-          )}
-        </div>
+        {!editing && (
+          <div className="flex items-center gap-2">
+            <button type="button" onClick={() => { setEditing(true); setEditTitle(list.title); setListError('') }} className="text-xs text-slate-500 hover:text-slate-900">Edit</button>
+            <button type="button" onClick={handleDeleteList} className="text-xs text-red-600 hover:text-red-800">Delete</button>
+          </div>
+        )}
       </div>
 
-      {listError && <p className="mb-2 text-xs text-red-600">Error: {listError}</p>}
+      {listError && <p className="px-3 mb-2 text-xs text-red-600">Error: {listError}</p>}
+      {error && <p className="px-3 mb-2 text-xs text-red-600">Error: {error}</p>}
 
-      {error && <p className="mb-2 text-xs text-red-600">Error: {error}</p>}
-
-      <div className="space-y-2">
+      <div className="px-3 space-y-2 overflow-y-auto flex-1 pb-2">
         {cards.map((card) => (
           <CardItem
             key={card.id}
@@ -168,7 +157,7 @@ export default function ListColumn({ list, boardId, members, tags }) {
             listId={list.id}
             members={members}
             tags={tags}
-            allLists={parentLists}
+            allLists={allLists}
             onRefresh={fetchCards}
             moveTarget={moveTargets[card.id] || { list_id: '', order: '' }}
             onMoveChange={(val) => setMoveTargets((prev) => ({ ...prev, [card.id]: val }))}
@@ -178,45 +167,47 @@ export default function ListColumn({ list, boardId, members, tags }) {
         ))}
       </div>
 
-      {!showAdd ? (
-        <button
-          type="button"
-          onClick={() => setShowAdd(true)}
-          className="mt-2 text-xs text-gray-600 hover:text-gray-900"
-        >
-          + Add Card
-        </button>
-      ) : (
-        <form onSubmit={handleAddCard} className="mt-2 space-y-2 bg-white p-2 rounded border">
-          <input
-            type="text"
-            value={newTitle}
-            onChange={(e) => setNewTitle(e.target.value)}
-            placeholder="Card title"
-            className="w-full rounded border border-gray-300 px-2 py-1 text-sm"
-            required
-          />
-          <textarea
-            value={newDescription}
-            onChange={(e) => setNewDescription(e.target.value)}
-            placeholder="Description (optional)"
-            className="w-full rounded border border-gray-300 px-2 py-1 text-sm"
-            rows={2}
-          />
-          <input
-            type="date"
-            value={newDueDate}
-            onChange={(e) => setNewDueDate(e.target.value)}
-            className="w-full rounded border border-gray-300 px-2 py-1 text-sm"
-          />
-          <div className="flex items-center gap-2">
-            <button type="submit" disabled={saving} className="px-3 py-1 bg-indigo-600 text-white rounded text-xs hover:bg-indigo-700 disabled:opacity-50">
-              {saving ? 'Adding...' : 'Add'}
-            </button>
-            <button type="button" onClick={() => setShowAdd(false)} className="px-3 py-1 bg-gray-200 rounded text-xs">Cancel</button>
-          </div>
-        </form>
-      )}
+      <div className="px-3 pb-3 pt-1">
+        {!showAdd ? (
+          <button
+            type="button"
+            onClick={() => setShowAdd(true)}
+            className="text-xs text-slate-600 hover:text-slate-900 w-full text-left py-1.5 px-2 rounded hover:bg-white/60"
+          >
+            + Add Card
+          </button>
+        ) : (
+          <form onSubmit={handleAddCard} className="space-y-2 bg-white p-2 rounded border border-slate-200">
+            <input
+              type="text"
+              value={newTitle}
+              onChange={(e) => setNewTitle(e.target.value)}
+              placeholder="Card title"
+              className="w-full rounded border border-slate-300 px-2 py-1.5 text-sm"
+              required
+            />
+            <textarea
+              value={newDescription}
+              onChange={(e) => setNewDescription(e.target.value)}
+              placeholder="Description (optional)"
+              className="w-full rounded border border-slate-300 px-2 py-1.5 text-sm"
+              rows={2}
+            />
+            <input
+              type="date"
+              value={newDueDate}
+              onChange={(e) => setNewDueDate(e.target.value)}
+              className="w-full rounded border border-slate-300 px-2 py-1.5 text-sm"
+            />
+            <div className="flex items-center gap-2">
+              <button type="submit" disabled={saving} className="px-3 py-1.5 bg-indigo-600 text-white rounded text-xs hover:bg-indigo-700 disabled:opacity-50">
+                {saving ? 'Adding...' : 'Add'}
+              </button>
+              <button type="button" onClick={() => setShowAdd(false)} className="px-3 py-1.5 bg-slate-100 text-slate-700 rounded text-xs hover:bg-slate-200">Cancel</button>
+            </div>
+          </form>
+        )}
+      </div>
     </div>
   )
 }
