@@ -37,8 +37,7 @@ Route::prefix('v1')->group(function () {
             ->scoped(['member' => 'member']);
         Route::prefix('lists/{list}')->group(function () {
             Route::apiResource('cards', CardController::class)
-                ->scoped(['card' => 'card'])
-                ->except(['index']);
+                ->scoped(['card' => 'card']);
             Route::put('cards/{card}/move', [CardController::class, 'move']);
         });
         Route::prefix('cards/{card}')->group(function () {
