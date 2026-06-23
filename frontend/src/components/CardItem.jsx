@@ -9,39 +9,14 @@ export default function CardItem({
   listId,
   members = [],
   tags = [],
-  allLists = [],
   onRefresh,
-  moveTarget = { list_id: '', order: '' },
-  onMoveChange,
-  onMove,
-  moving = false,
 }) {
   const [editing, setEditing] = useState(false)
   const [editTitle, setEditTitle] = useState(card.title)
   const [editDescription, setEditDescription] = useState(card.description || '')
   const [editDueDate, setEditDueDate] = useState(card.due_date || '')
-  const [localMembers, setLocalMembers] = useState(card.members || [])
-  const [localTags, setLocalTags] = useState(card.tags || [])
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
-
-  useEffect(() => {
-    setLocalMembers(card.members || [])
-    setLocalTags(card.tags || [])
-  }, [card.members, card.tags])
-
-  const refreshCard = async () => {
-    try {
-      const { data } = await axios.get(`${API}/boards/${boardId}/lists/${listId}/cards/${card.id}`)
-      const updated = data.data ?? data
-      setLocalMembers(updated.members || [])
-      setLocalTags(updated.tags || [])
-      // update basic fields
-      onRefresh?.()
-    } catch {
-      // ignore
-    }
-  }
 
   const isOverdue = useMemo(() => {
     if (!card.due_date) return false
@@ -61,10 +36,6 @@ export default function CardItem({
         description: editDescription.trim(),
         due_date: editDueDate || null,
       })
-      const { data } = await axios.get(`${API}/boards/${boardId}/lists/${listId}/cards/${card.id}`)
-      const updated = data.data ?? data
-      // update parent state via onRefresh; also update local fields
-      Object.assign(card, updated)
       setEditing(false)
       onRefresh?.()
     } catch (e) {
@@ -81,58 +52,6 @@ export default function CardItem({
     try {
       await axios.delete(`${API}/boards/${boardId}/lists/${listId}/cards/${card.id}`)
       onRefresh?.()
-    } catch (e) {
-      setError(e.message)
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  const handleAssign = async (memberId) => {
-    setSaving(true)
-    setError('')
-    try {
-      await axios.put(`${API}/boards/${boardId}/cards/${card.id}/assign`, { member_id: Number(memberId) })
-      await refreshCard()
-    } catch (e) {
-      setError(e.message)
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  const handleUnassign = async (memberId) => {
-    setSaving(true)
-    setError('')
-    try {
-      await axios.delete(`${API}/boards/${boardId}/cards/${card.id}/assign`, { data: { member_id: Number(memberId) } })
-      await refreshCard()
-    } catch (e) {
-      setError(e.message)
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  const handleAttachTag = async (tagId) => {
-    setSaving(true)
-    setError('')
-    try {
-      await axios.post(`${API}/boards/${boardId}/cards/${card.id}/tags/${tagId}`)
-      await refreshCard()
-    } catch (e) {
-      setError(e.message)
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  const handleDetachTag = async (tagId) => {
-    setSaving(true)
-    setError('')
-    try {
-      await axios.delete(`${API}/boards/${boardId}/cards/${card.id}/tags/${tagId}`)
-      await refreshCard()
     } catch (e) {
       setError(e.message)
     } finally {
@@ -168,119 +87,6 @@ export default function CardItem({
           {editing ? 'Close' : 'Edit'}
         </button>
       </div>
-
-      {(localTags || []).length > 0 && (
-        <div className="mt-2 flex flex-wrap gap-1">
-          {localTags.map((tag) => (
-            <span
-              key={tag.id}
-              className="px-2 py-0.5 rounded text-xs"
-              style={{
-                backgroundColor: tag.color || '#dbeafe',
-                color: tag.color ? '#1f2937' : '#1e40af',
-              }}
-            >
-              {tag.name}
-              <button
-                type="button"
-                onClick={() => handleDetachTag(tag.id)}
-                className="ml-1 text-gray-800 hover:text-red-800"
-              >
-                ×
-              </button>
-            </span>
-          ))}
-        </div>
-      )}
-
-      {(localMembers || []).length > 0 && (
-        <div className="mt-2 flex flex-wrap gap-1">
-          {localMembers.map((m) => (
-            <span key={m.id} className="px-2 py-0.5 bg-green-100 text-green-800 rounded text-xs flex items-center gap-1">
-              {m.name || m.user?.name || m.user_id}
-              <button
-                type="button"
-                onClick={() => handleUnassign(m.id)}
-                className="text-green-900 hover:text-red-700"
-              >
-                ×
-              </button>
-            </span>
-          ))}
-        </div>
-      )}
-
-      {!editing && (
-        <div className="mt-2 space-y-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <select
-              value=""
-              onChange={(e) => { if (e.target.value) handleAssign(e.target.value) }}
-              disabled={saving}
-              className="rounded border border-gray-300 px-2 py-1 text-xs"
-              defaultValue=""
-            >
-              <option value="" disabled>Assign member...</option>
-              {members
-                .filter((m) => !(localMembers || []).some((lm) => lm.id === m.id))
-                .map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.name || m.user?.name || m.user_id}
-                  </option>
-                ))}
-            </select>
-
-            <select
-              value=""
-              onChange={(e) => { if (e.target.value) handleAttachTag(e.target.value) }}
-              disabled={saving}
-              className="rounded border border-gray-300 px-2 py-1 text-xs"
-              defaultValue=""
-            >
-              <option value="" disabled>Attach tag...</option>
-              {tags
-                .filter((t) => !(localTags || []).some((lt) => lt.id === t.id))
-                .map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.name}
-                  </option>
-                ))}
-            </select>
-
-            {(allLists && allLists.length > 1) && (
-              <div className="flex items-center gap-1">
-                <select
-                  value={moveTarget.list_id}
-                  onChange={(e) => onMoveChange({ list_id: e.target.value, order: moveTarget.order })}
-                  className="rounded border border-gray-300 px-2 py-1 text-xs"
-                >
-                  <option value="">Move to...</option>
-                  {allLists
-                    .filter((l) => String(l.id) !== String(listId))
-                    .map((l) => (
-                      <option key={l.id} value={l.id}>{l.title}</option>
-                    ))}
-                </select>
-                <input
-                  type="number"
-                  value={moveTarget.order}
-                  onChange={(e) => onMoveChange({ list_id: moveTarget.list_id, order: e.target.value })}
-                  placeholder="Order"
-                  className="rounded border border-gray-300 px-2 py-1 text-xs w-16"
-                />
-                <button
-                  type="button"
-                  onClick={onMove}
-                  disabled={moving || !moveTarget.list_id}
-                  className="px-2 py-1 bg-gray-800 text-white rounded text-xs disabled:opacity-50"
-                >
-                  {moving ? 'Moving...' : 'Move'}
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
 
       {error && !editing && <p className="mt-1 text-xs text-red-600">Error: {error}</p>}
 

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import axios from 'axios'
 import CardItem from './CardItem'
 
@@ -16,8 +16,6 @@ export default function ListColumn({ list, boardId, members, tags, allLists }) {
   const [editing, setEditing] = useState(false)
   const [editTitle, setEditTitle] = useState(list.title)
   const [listError, setListError] = useState('')
-  const [moveTargets, setMoveTargets] = useState({})
-  const [moving, setMoving] = useState({})
 
   const fetchCards = async () => {
     let cancelled = false
@@ -84,38 +82,6 @@ export default function ListColumn({ list, boardId, members, tags, allLists }) {
     }
   }
 
-  const handleMove = async (cardId) => {
-    const payload = moveTargets[cardId]
-    if (!payload || !payload.list_id) return
-    setMoving((prev) => ({ ...prev, [cardId]: true }))
-    setError('')
-    try {
-      const { data } = await axios.put(
-        `${API}/boards/${boardId}/lists/${list.id}/cards/${cardId}/move`,
-        { list_id: Number(payload.list_id), order: Number(payload.order) || 0 }
-      )
-      const updated = data.data ?? data
-      if (Number(updated.list_id) !== Number(list.id)) {
-        setCards((prev) => prev.filter((c) => c.id !== cardId))
-      } else {
-        setCards((prev) => prev.map((c) => (c.id === cardId ? updated : c)))
-      }
-      setMoveTargets((prev) => {
-        const next = { ...prev }
-        delete next[cardId]
-        return next
-      })
-    } catch (e) {
-      setError(e.message)
-    } finally {
-      setMoving((prev) => {
-        const next = { ...prev }
-        delete next[cardId]
-        return next
-      })
-    }
-  }
-
   return (
     <div className="min-w-[270px] w-[270px] shrink-0 rounded-md bg-slate-50 border border-slate-200 flex flex-col max-h-full">
       <div className="flex items-center justify-between px-3 pt-3 pb-2">
@@ -159,10 +125,6 @@ export default function ListColumn({ list, boardId, members, tags, allLists }) {
             tags={tags}
             allLists={allLists}
             onRefresh={fetchCards}
-            moveTarget={moveTargets[card.id] || { list_id: '', order: '' }}
-            onMoveChange={(val) => setMoveTargets((prev) => ({ ...prev, [card.id]: val }))}
-            onMove={() => handleMove(card.id)}
-            moving={!!moving[card.id]}
           />
         ))}
       </div>
