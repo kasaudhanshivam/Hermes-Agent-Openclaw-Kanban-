@@ -22,7 +22,7 @@ class BoardController extends Controller
             'name' => 'required|string|max:255',
         ]);
 
-        $board = Board::create($validated + ['created_by' => $request->user()->id]);
+        $board = Board::create($validated + ['created_by' => 1]);
 
         return new BoardResource($board->load('lists', 'tags', 'members'));
     }
