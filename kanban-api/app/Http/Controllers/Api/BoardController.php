@@ -22,12 +22,12 @@ class BoardController extends Controller
             'name' => 'required|string|max:255',
         ]);
 
-        $board = Board::create($validated + ['created_by' => \App\Models\User::first()?->id ?? 1]);
+        $board = Board::create($validated + ['created_by' => 1]);
 
         return new BoardResource($board->load('lists', 'tags', 'members'));
     }
 
-    public function show(Request $request, $board)
+    public function show($board)
     {
         $board = Board::with('lists.cards.tags', 'lists.cards', 'tags', 'members')->findOrFail($board);
 
@@ -52,5 +52,7 @@ class BoardController extends Controller
         $board->delete();
 
         return response()->noContent();
+    }
+}
     }
 }
