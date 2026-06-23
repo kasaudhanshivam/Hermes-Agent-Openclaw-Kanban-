@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import axios from 'axios'
 
-const API = '/api/v1'
+const API = `${import.meta.env.VITE_API_BASE ?? ''}/api/v1`
 
 export default function BoardList({ onSelectBoard }) {
   const [boards, setBoards] = useState([])

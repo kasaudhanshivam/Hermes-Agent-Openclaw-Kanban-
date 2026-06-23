@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import axios from 'axios'
 import CardItem from './CardItem'
 
-const API = '/api/v1'
+const API = `${import.meta.env.VITE_API_BASE ?? ''}/api/v1`
 
 export default function ListColumn({ list, boardId, members, tags }) {
   const [cards, setCards] = useState([])
