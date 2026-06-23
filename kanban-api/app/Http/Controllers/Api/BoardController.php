@@ -54,5 +54,3 @@ class BoardController extends Controller
         return response()->noContent();
     }
 }
-    }
-}
