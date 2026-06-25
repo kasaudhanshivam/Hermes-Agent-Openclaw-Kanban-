@@ -1,0 +1,160 @@
+{
+  "agents": {
+    "defaults": {
+      "workspace": "/home/azureuser/.openclaw/workspace",
+      "models": {
+        "kilocode/poolside/laguna-m.1:free": {},
+        "kilocode/stepfun/step-3.7-flash:free": {},
+        "kilocode/kilo-auto/free": {},
+        "kilocode/poolside/laguna-xs.2:free": {},
+        "kilocode/openrouter/free": {}
+      },
+      "model": {
+        "primary": "kilocode/kilo-auto/free",
+        "fallbacks": [
+          "kilocode/poolside/laguna-m.1:free",
+          "kilocode/stepfun/step-3.7-flash:free",
+          "kilocode/poolside/laguna-xs.2:free",
+          "kilocode/openrouter/free"
+        ]
+      }
+    }
+  },
+  "gateway": {
+    "mode": "local",
+    "auth": {
+      "mode": "token",
+      "token": "MODEL_API_KEY"
+    },
+    "port": 18789,
+    "bind": "loopback",
+    "tailscale": {
+      "mode": "off",
+      "resetOnExit": false
+    },
+    "controlUi": {
+      "allowInsecureAuth": true
+    },
+    "nodes": {
+      "denyCommands": [
+        "camera.snap",
+        "camera.clip",
+        "screen.record",
+        "contacts.add",
+        "calendar.add",
+        "reminders.add",
+        "sms.send",
+        "sms.search"
+      ]
+    }
+  },
+  "session": {
+    "dmScope": "per-channel-peer"
+  },
+  "tools": {
+    "profile": "coding",
+    "web": {
+      "search": {
+        "provider": "parallel-free",
+        "enabled": true
+      }
+    }
+  },
+  "plugins": {
+    "entries": {
+      "kilocode": {
+        "enabled": true
+      },
+      "opencode": {
+        "enabled": true
+      },
+      "parallel": {
+        "enabled": true
+      },
+      "slack": {
+        "enabled": true
+      }
+    }
+     },
+  "auth": {
+    "profiles": {
+      "opencode:default": {
+        "provider": "opencode",
+        "mode": "api_key"
+      },
+      "opencode-go:default": {
+        "provider": "opencode-go",
+        "mode": "api_key"
+      },
+      "kilocode:default": {
+        "provider": "kilocode",
+        "mode": "api_key"
+      }
+    }
+  },
+  "wizard": {
+    "lastRunAt": "2026-06-23T20:08:01.900Z",
+    "lastRunVersion": "2026.6.9",
+    "lastRunCommand": "configure",
+    "lastRunMode": "local"
+  },
+  "meta": {
+    "lastTouchedVersion": "2026.6.9",
+    "lastTouchedAt": "2026-06-24T08:50:12.390Z"
+    },
+  "channels": {
+    "slack": {
+      "enabled": true,
+      "channels": {
+        "C0BCG399VK4": {
+          "enabled": true,
+          "allowBots": true,
+          "botLoopProtection": {
+            "enabled": false
+          },
+          "users": [
+            "U0BBZR3CDB9"
+          ]
+        },
+        "C0BCHU2CEF3": {
+          "enabled": true
+        }
+      },
+      "capabilities": {
+        "interactiveReplies": true
+      },
+      "allowBots": true,
+      "botLoopProtection": {
+        "enabled": false
+        }
+    }
+  },
+  "models": {
+    "mode": "merge",
+    "providers": {
+      "kilocode": {
+        "baseUrl": "https://api.kilo.ai/api/gateway/",
+        "api": "openai-completions",
+        "models": [
+          {
+            "id": "kilo/auto",
+            "name": "Kilo Auto",
+            "reasoning": true,
+            "input": [
+              "text",
+              "image"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 1000000,
+            "maxTokens": 128000
+            }
+        ]
+      }
+    }
+  }
+}
