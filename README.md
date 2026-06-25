@@ -6,8 +6,9 @@ A full-stack Kanban board application built entirely through a dual-agent workfl
 
 ## Important Links
 
-* **Live Frontend URL:** [INSERT VERCEL/NETLIFY LINK HERE]
-* **Video Walkthrough (60-90s):** [INSERT GOOGLE DRIVE/LOOM LINK HERE - MAKE PUBLIC]
+* **Live Frontend URL:** https://forge.shivamkasaudhan.dev/ (Vercel)
+* **Live Backend URL:** https://hermes-agent-openclaw-kanban.onrender.com/ (Render)
+* **Video Walkthrough (60-90s):** []
 
 ## Features Built via Agents
 
